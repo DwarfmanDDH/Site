@@ -1,0 +1,13 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start Kalashnikoff Site Server",
+			"type": "shell",
+			"command": "py -3 manage.py runserver 127.0.0.1:8080",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}

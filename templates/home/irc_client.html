@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}IRC Client - Kalashnikoff Site{% endblock %}
+
+{% block content %}
+<div class="container-fluid h-100">
+    <div class="row py-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-comments"></i> IRC Client</h2>
+                <div class="connection-status">
+                    <span id="connectionStatus" class="badge bg-secondary">Disconnected</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row" style="height: calc(100vh - 200px);">
+        <!-- Chat Area -->
+        <div class="col-md-9">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span id="currentChannel">IRC Chat</span>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-light" id="clearChat">
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0 d-flex flex-column">
+                    <div id="chatMessages" class="flex-grow-1 p-3" style="overflow-y: auto; max-height: 400px; background: #f8f9fa;">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> 
+                            Welcome to the IRC client! Use the commands below to get started:
+                            <ul class="mt-2 mb-0">
+                                <li><code>/connect &lt;server&gt; &lt;port&gt; &lt;nickname&gt;</code> - Connect to an IRC server</li>
+                                <li><code>/join #&lt;channel&gt;</code> - Join a channel</li>
+                                <li><code>/msg &lt;target&gt; &lt;message&gt;</code> - Send a private message</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="p-3 border-top">
+                        <div class="input-group">
+                            <input type="text" id="messageInput" class="form-control" placeholder="Type your message or IRC command..." autocomplete="off">
+                            <button class="btn btn-primary" id="sendButton">
+                                <i class="fas fa-paper-plane"></i> Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white">
+                    <i class="fas fa-cog"></i> Connection & Help
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6><i class="fas fa-server"></i> Quick Connect</h6>
+                        <div class="mb-2">
+                            <input type="text" id="serverInput" class="form-control form-control-sm" placeholder="Server (e.g., irc.libera.chat)">
+                        </div>
+                        <div class="mb-2">
+                            <input type="number" id="portInput" class="form-control form-control-sm" placeholder="Port (e.g., 6667)" value="6667">
+                        </div>
+                        <div class="mb-2">
+                            <input type="text" id="nicknameInput" class="form-control form-control-sm" placeholder="Nickname">
+                        </div>
+                        <button class="btn btn-success btn-sm w-100" id="quickConnect">
+                            <i class="fas fa-plug"></i> Connect
+                        </button>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <h6><i class="fas fa-hashtag"></i> Quick Join</h6>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="channelInput" class="form-control" placeholder="Channel (e.g., #general)">
+                            <button class="btn btn-outline-secondary" id="joinChannel">Join</button>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <h6><i class="fas fa-question-circle"></i> Commands</h6>
+                        <small class="text-muted">
+                            <div class="mb-1"><code>/connect server port nick</code></div>
+                            <div class="mb-1"><code>/join #channel</code></div>
+                            <div class="mb-1"><code>/msg user message</code></div>
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6><i class="fas fa-users"></i> Popular Servers</h6>
+                        <div class="list-group list-group-flush">
+                            <button class="list-group-item list-group-item-action p-2 border-0 bg-transparent" data-server="irc.libera.chat" data-port="6667">
+                                <small><strong>Libera.Chat</strong><br>irc.libera.chat:6667</small>
+                            </button>
+                            <button class="list-group-item list-group-item-action p-2 border-0 bg-transparent" data-server="irc.oftc.net" data-port="6667">
+                                <small><strong>OFTC</strong><br>irc.oftc.net:6667</small>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+class IRCClient {
+    constructor() {
+        this.socket = null;
+        this.isConnected = false;
+        this.currentChannel = null;
+        
+        this.initializeElements();
+        this.setupEventListeners();
+        this.connectWebSocket();
+    }
+    
+    initializeElements() {
+        this.chatMessages = document.getElementById('chatMessages');
+        this.messageInput = document.getElementById('messageInput');
+        this.sendButton = document.getElementById('sendButton');
+        this.connectionStatus = document.getElementById('connectionStatus');
+        this.currentChannelSpan = document.getElementById('currentChannel');
+        
+        // Quick connect elements
+        this.serverInput = document.getElementById('serverInput');
+        this.portInput = document.getElementById('portInput');
+        this.nicknameInput = document.getElementById('nicknameInput');
+        this.quickConnectBtn = document.getElementById('quickConnect');
+        
+        // Channel elements
+        this.channelInput = document.getElementById('channelInput');
+        this.joinChannelBtn = document.getElementById('joinChannel');
+        
+        // Clear chat button
+        this.clearChatBtn = document.getElementById('clearChat');
+    }
+    
+    setupEventListeners() {
+        this.sendButton.addEventListener('click', () => this.sendMessage());
+        this.messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.sendMessage();
+        });
+        
+        this.quickConnectBtn.addEventListener('click', () => this.quickConnect());
+        this.joinChannelBtn.addEventListener('click', () => this.joinChannel());
+        this.clearChatBtn.addEventListener('click', () => this.clearChat());
+        
+        // Popular servers
+        document.querySelectorAll('[data-server]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.serverInput.value = e.currentTarget.dataset.server;
+                this.portInput.value = e.currentTarget.dataset.port;
+            });
+        });
+    }
+    
+    connectWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/irc/`;
+        
+        this.socket = new WebSocket(wsUrl);
+        
+        this.socket.onopen = () => {
+            this.updateConnectionStatus('Connected to WebSocket', 'success');
+        };
+        
+        this.socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            this.handleMessage(data);
+        };
+        
+        this.socket.onclose = () => {
+            this.updateConnectionStatus('WebSocket Disconnected', 'danger');
+            this.isConnected = false;
+        };
+        
+        this.socket.onerror = (error) => {
+            this.updateConnectionStatus('WebSocket Error', 'danger');
+            console.error('WebSocket error:', error);
+        };
+    }
+    
+    handleMessage(data) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'mb-2';
+        
+        const timestamp = new Date().toLocaleTimeString();
+        
+        switch(data.type) {
+            case 'system':
+                messageDiv.innerHTML = `
+                    <div class="alert alert-info alert-sm p-2 mb-1">
+                        <small class="text-muted">[${timestamp}]</small> 
+                        <i class="fas fa-info-circle"></i> ${data.message}
+                    </div>
+                `;
+                break;
+                
+            case 'message':
+                messageDiv.innerHTML = `
+                    <div class="p-2 border rounded">
+                        <small class="text-muted">[${timestamp}] ${data.target || ''}</small><br>
+                        ${data.message}
+                    </div>
+                `;
+                break;
+                
+            case 'error':
+                messageDiv.innerHTML = `
+                    <div class="alert alert-danger alert-sm p-2 mb-1">
+                        <small class="text-muted">[${timestamp}]</small> 
+                        <i class="fas fa-exclamation-triangle"></i> ${data.message}
+                    </div>
+                `;
+                break;
+                
+            case 'raw':
+                messageDiv.innerHTML = `
+                    <div class="text-muted small">
+                        <small class="text-muted">[${timestamp}]</small> 
+                        <code>${data.message}</code>
+                    </div>
+                `;
+                break;
+        }
+        
+        this.chatMessages.appendChild(messageDiv);
+        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+    }
+    
+    sendMessage() {
+        const message = this.messageInput.value.trim();
+        if (!message) return;
+        
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(JSON.stringify({
+                command: message
+            }));
+            this.messageInput.value = '';
+        } else {
+            this.addSystemMessage('WebSocket not connected');
+        }
+    }
+    
+    quickConnect() {
+        const server = this.serverInput.value.trim();
+        const port = this.portInput.value.trim();
+        const nickname = this.nicknameInput.value.trim();
+        
+        if (!server || !port || !nickname) {
+            alert('Please fill in all connection fields');
+            return;
+        }
+        
+        this.sendCommand(`/connect ${server} ${port} ${nickname}`);
+    }
+    
+    joinChannel() {
+        const channel = this.channelInput.value.trim();
+        if (!channel) {
+            alert('Please enter a channel name');
+            return;
+        }
+        
+        const channelName = channel.startsWith('#') ? channel : '#' + channel;
+        this.sendCommand(`/join ${channelName}`);
+        this.currentChannel = channelName;
+        this.currentChannelSpan.textContent = channelName;
+        this.channelInput.value = '';
+    }
+    
+    sendCommand(command) {
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(JSON.stringify({
+                command: command
+            }));
+        }
+    }
+    
+    clearChat() {
+        this.chatMessages.innerHTML = '';
+    }
+    
+    updateConnectionStatus(message, type) {
+        this.connectionStatus.textContent = message;
+        this.connectionStatus.className = `badge bg-${type}`;
+    }
+    
+    addSystemMessage(message) {
+        const messageDiv = document.createElement('div');
+        const timestamp = new Date().toLocaleTimeString();
+        messageDiv.innerHTML = `
+            <div class="alert alert-info alert-sm p-2 mb-1">
+                <small class="text-muted">[${timestamp}]</small> 
+                <i class="fas fa-info-circle"></i> ${message}
+            </div>
+        `;
+        this.chatMessages.appendChild(messageDiv);
+        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+    }
+}
+
+// Initialize the IRC client when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    window.ircClient = new IRCClient();
+});
+</script>
+{% endblock %}

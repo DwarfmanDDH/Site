@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Welcome - Kalashnikoff Site{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <div class="row min-vh-100 align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold text-primary mb-4">
+                    Welcome to Kalashnikoff
+                </h1>
+                <p class="lead mb-4">
+                    Your gateway to modern communication and collaboration. 
+                    Connect with others through our integrated IRC client and explore 
+                    our growing suite of tools.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="{% url 'irc_client' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-comments"></i> Join IRC Chat
+                    </a>
+                    <a href="#features" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-info-circle"></i> Learn More
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <i class="fas fa-server fa-10x text-primary opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section id="features" class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center mb-5">
+                <h2 class="display-5 fw-bold">Features</h2>
+                <p class="lead">Explore what our platform has to offer</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-comments fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">IRC Client</h5>
+                        <p class="card-text">
+                            Connect to IRC servers and chat with people from around the world. 
+                            Full-featured client with channel support and real-time messaging.
+                        </p>
+                        <a href="{% url 'irc_client' %}" class="btn btn-primary">
+                            Launch IRC
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                        <h5 class="card-title">Secure Communication</h5>
+                        <p class="card-text">
+                            Your privacy matters. All connections are secured and your 
+                            conversations remain private with end-to-end protection.
+                        </p>
+                        <button class="btn btn-success" disabled>
+                            Coming Soon
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users fa-3x text-info mb-3"></i>
+                        <h5 class="card-title">Community</h5>
+                        <p class="card-text">
+                            Join a growing community of users. Share ideas, collaborate 
+                            on projects, and connect with like-minded individuals.
+                        </p>
+                        <button class="btn btn-info" disabled>
+                            Coming Soon
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h2 class="display-6 fw-bold mb-4">Ready to Get Started?</h2>
+                <p class="lead mb-4">
+                    Join thousands of users who are already using our platform to 
+                    communicate and collaborate effectively.
+                </p>
+                <a href="{% url 'irc_client' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-rocket"></i> Start Chatting Now
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
