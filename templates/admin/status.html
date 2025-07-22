@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Admin Status - Kalashnikoff Site{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Server Status</h2>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">Webserver</div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>PID:</strong> {{ web_status.pid }}</li>
+                        <li class="list-group-item"><strong>Python Version:</strong> {{ web_status.python_version }}</li>
+                        <li class="list-group-item"><strong>Server Time:</strong> {{ web_status.server_time }}</li>
+                        <li class="list-group-item"><strong>Working Directory:</strong> {{ web_status.cwd }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">IRC Server</div>
+                <div class="card-body">
+                    {% if irc_status.error %}
+                        <div class="alert alert-danger">Error: {{ irc_status.error }}</div>
+                    {% endif %}
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>Connected Users:</strong> {{ irc_status.user_count }}</li>
+                        <li class="list-group-item"><strong>User List:</strong> {{ irc_status.users|join:', ' }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h3 class="mb-3">IRC Join/Leave Events</h3>
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Event</th>
+                        <th>User</th>
+                        <th>Info</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t, event, user, info in irc_status.events %}
+                    <tr>
+                        <td>{{ t }}</td>
+                        <td>
+                            {% if event == 'join' %}
+                                <span class="badge bg-success">Join</span>
+                            {% elif event == 'leave' %}
+                                <span class="badge bg-danger">Leave</span>
+                            {% else %}
+                                {{ event }}
+                            {% endif %}
+                        </td>
+                        <td>{{ user }}</td>
+                        <td>{{ info }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center">No events yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
